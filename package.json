@@ -20,6 +20,7 @@
     "express-handlebars": "^6.0.1",
     "express-session": "^1.17.2",
     "filesize": "^8.0.6",
+    "image-thumbnail": "^1.0.15",
     "jquery": "^3.6.0",
     "node-pty": "^0.10.1",
     "notp": "^2.0.3",
