@@ -616,18 +616,32 @@ function isVideo(f) {
 
 app.get("/@thumbnail/*", async (req, res) => {
   const encoded = decodeURI(req.url)
-  const path = encoded.replace('/@thumbnail/', '')
-  const lastSlash = path.lastIndexOf('/')
+  const thumbUrlPath = encoded.replace('/@thumbnail/', '')
+  const lastSlash = thumbUrlPath.lastIndexOf('/')
 
   const isLastSlash = lastSlash > -1
 
-  const folder = isLastSlash ? path.slice(0, lastSlash) : '/'
-  const filename = isLastSlash ? path.slice(lastSlash) : path
+  const folder = isLastSlash ? thumbUrlPath.slice(0, lastSlash) : '/'
+  const filename = isLastSlash ? thumbUrlPath.slice(lastSlash) : thumbUrlPath
 
   if(isVideo(filename)) return res.end()
 
-  const tn = await imageThumbnail(relative(folder, filename))
+  const filePath = relative(folder, filename)
+
+  const thumbPath = relative(`.thumbs/${folder}`, `.${filename}.thmb`)
+  const thumbFolder = path.dirname(thumbPath)
+
+  if(fs.existsSync(thumbPath)) {
+    return res.end(fs.readFileSync(thumbPath))
+  }
+
+  if(!fs.existsSync(thumbFolder)) {
+    fs.mkdirSync(thumbFolder, { recursive: true });
+  }
+
+  const tn = await imageThumbnail(filePath)
   res.end(tn)
+  fs.writeFileSync(thumbPath, tn)
 })
 
 app.get("/*", (req, res) => {
