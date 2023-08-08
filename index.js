@@ -658,7 +658,7 @@ app.get("/*", (req, res) => {
     readDir
       .then((filenames) => {
         const filesLength = filenames.length
-        const promises = filenames.map(
+        const promises = filenames.filter(name => !(name.endsWith('.thmb') || name.startsWith('.'))).map(
           (f, index) =>
             new Promise((resolve, reject) => {
               fs.stat(relative(res.filename, f), async (err, stats) => {
