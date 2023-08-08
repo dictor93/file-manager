@@ -92,7 +92,11 @@ const createCarousel = (address, prev, next, onClose) => {
     carousel.style.display = 'flex'
     carousel.append(video)
   } else {
-    carousel.style.backgroundImage = `url(${location}${address})`
+    const url = `url(${location}${encodeURIComponent(address).replace(
+      /['()*]/g,
+      (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+    )})`
+    carousel.style.backgroundImage = url
     if(prev) {
       carousel.appendChild(prevBtn)
       prevBtn.addEventListener('click', onPrev)
