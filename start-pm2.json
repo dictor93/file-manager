@@ -1,0 +1,9 @@
+{
+    "apps": [
+        {
+            "name": "file-manager",
+            "script": "npm",
+            "args" : "start:token"
+        }
+    ]
+}

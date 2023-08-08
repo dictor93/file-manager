@@ -4,7 +4,9 @@
 /* jshint node: true */
 "use strict";
 
+const imageThumbnail = require('image-thumbnail');
 const express = require("express");
+const https = require('https');
 const { engine: hbs } = require("express-handlebars");
 const session = require("express-session");
 const busboy = require("connect-busboy");
@@ -27,8 +29,14 @@ const handlebars = require("handlebars");
 const port = +process.env.PORT || 8080;
 
 const app = express();
-const http = app.listen(port);
 
+
+const options = {
+  key: fs.readFileSync('../ssl/site.key'),
+  cert: fs.readFileSync('../ssl/site.crt'),
+};
+
+const http = https.createServer(options, app).listen(port);
 app.set("views", path.join(__dirname, "views"));
 app.engine(
   "handlebars",
@@ -97,9 +105,9 @@ app.use(
 );
 // AUTH
 
-const KEY = process.env.KEY
-  ? base32.decode(process.env.KEY.replace(/ /g, ""))
-  : null;
+const KEY = '871538'//process.env.KEY
+  // ? process.env.KEY.replace(/ /g, "")
+  // : null;
 
 app.get("/@logout", (req, res) => {
   if (KEY) {
@@ -116,7 +124,7 @@ app.get("/@login", (req, res) => {
   res.render("login", flashify(req, {}));
 });
 app.post("/@login", (req, res) => {
-  let pass = notp.totp.verify(req.body.token.replace(" ", ""), KEY);
+  let pass = req.body.token.replace(" ", "") === KEY ? KEY : null;
   if (pass) {
     req.session.login = true;
     res.redirect("/");
@@ -587,15 +595,40 @@ if (shellable || cmdable) {
 }
 
 const SMALL_IMAGE_MAX_SIZE = 750 * 1024; // 750 KB
-const EXT_IMAGES = [".jpg", ".jpeg", ".png", ".webp", ".svg", ".gif", ".tiff"];
+const EXT_IMAGES = [".jpg", ".jpeg", ".png", ".webp", ".svg", ".gif", ".tiff", ".mp4", ".3gp", ".avi", ".wmv"];
 function isimage(f) {
+  const fExt = f.split('.').pop().toLowerCase();
   for (const ext of EXT_IMAGES) {
-    if (f.endsWith(ext)) {
+    if (`.${fExt}`.endsWith(ext)) {
       return true;
     }
   }
   return false;
 }
+
+const EXT_VIDEOS = [".mp4", ".3gp", ".avi", ".wmv"];
+
+function isVideo(f) {
+  const fExt = f.split('.').pop().toLowerCase();
+  return EXT_VIDEOS.some(ext => `.${fExt}`.endsWith(ext))
+}
+
+
+app.get("/@thumbnail/*", async (req, res) => {
+  const encoded = decodeURI(req.url)
+  const path = encoded.replace('/@thumbnail/', '')
+  const lastSlash = path.lastIndexOf('/')
+
+  const isLastSlash = lastSlash > -1
+
+  const folder = isLastSlash ? path.slice(0, lastSlash) : '/'
+  const filename = isLastSlash ? path.slice(lastSlash) : path
+
+  if(isVideo(filename)) return res.end()
+
+  const tn = await imageThumbnail(relative(folder, filename))
+  res.end(tn)
+})
 
 app.get("/*", (req, res) => {
   if (res.stats.error) {
@@ -624,10 +657,11 @@ app.get("/*", (req, res) => {
 
     readDir
       .then((filenames) => {
+        const filesLength = filenames.length
         const promises = filenames.map(
-          (f) =>
+          (f, index) =>
             new Promise((resolve, reject) => {
-              fs.stat(relative(res.filename, f), (err, stats) => {
+              fs.stat(relative(res.filename, f), async (err, stats) => {
                 if (err) {
                   console.warn(err);
                   return resolve({
@@ -635,11 +669,42 @@ app.get("/*", (req, res) => {
                     error: err,
                   });
                 }
+                const isImage = isimage(f)
+                const thumbnail = isImage ? `/@thumbnail/${res.filename}${f}` : null
+
+                let prevImg;
+                let ind = index
+                
+                do {
+                  const prev = filenames[ind - 1]
+                  if(!prev) break;
+                  if(isimage(prev)) {
+                    prevImg = ind - 1;
+                    break;
+                  }
+                  ind -= 1;
+                } while (ind >= 0);
+
+                let nextImg
+                ind = index
+                do {
+                  const next = filenames[ind + 1]
+                  if(!next) break;
+                  if(isimage(next)) {
+                    nextImg = ind + 1;
+                    break;
+                  }
+                  ind += 1;
+                } while (ind >= 0);
+
                 resolve({
                   name: f,
                   isdirectory: stats.isDirectory(),
-                  issmallimage: isimage(f) && stats.size < SMALL_IMAGE_MAX_SIZE,
+                  isImage,
+                  thumbnail,
                   size: stats.size,
+                  prevImg,
+                  nextImg,
                 });
               });
             })

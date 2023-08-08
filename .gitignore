@@ -1,1 +1,5 @@
 node_modules/
+ssl/
+.env
+data
+package-lock.json

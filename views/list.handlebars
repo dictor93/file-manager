@@ -22,19 +22,37 @@
 								<input type="checkbox" class="form-check-input multi-select" data-select="{{name}}" data-select-size="{{size}}" data-select-type="{{#if isdirectory}}directory{{else}}file{{/if}}" id="check{{@index}}">
 								<span class="form-check-label d-flex align-items-start justify-content-between">
 									{{#if isdirectory}}
-										<a href="./{{name}}/" class="name">{{name}}/</a>
+										<a href="./{{name}}/" class="name"><span class="dir-icon"></span>{{name}}/</a>
 									{{else}}
 									{{#if error}}
 										<a href="./{{name}}/" class="name" title="{{error}}">{{name}}/</a>
 										<span class="badge rounded-pill bg-danger badge-alignment">err</span>
 									{{else}}
-										<a href="./{{name}}" class="name">{{name}}</a>
+										<a
+											{{#if isImage}}
+											onClick="openCarousel(event)"
+											{{/if}}
+											class="name"
+											data-index="{{@index}}"
+											data-name="{{name}}"
+											data-prev="{{prevImg}}"
+											data-next="{{nextImg}}"
+											data-length="{{files.length}}"
+											{{#if isImage}}
+											href="javascript:void(0)"
+											{{else}}
+											href="./{{name}}"
+											{{/if}}
+										>
+											{{#if isImage}}
+											<img src="{{thumbnail}}" alt="{{name}}" class="mt-2" style="max-height: 6em; max-width: 100%;">
+											{{else}}
+											{{name}}
+											{{/if}}
+										</a>
 										<span class="badge rounded-pill bg-secondary badge-alignment">{{filesize size}}</span>
 									{{/if}}
-									{{/if}}
 								</span>
-								{{#if issmallimage}}
-								<img src="./{{name}}" class="mt-2" style="max-height: 6em; max-width: 100%;">
 								{{/if}}
 							</div>
 						</label>
@@ -48,6 +66,9 @@
 			</div>
 		</div>
 	</main>
+	<div id="popup-root">
+
+	</div>
 </div>
 
 {{> toolbar shellable=shellable cmdable=cmdable}}
