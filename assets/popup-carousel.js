@@ -1,3 +1,10 @@
+const EXT_VIDEOS = [".mp4", ".3gp", ".avi", ".wmv"];
+
+function isVideo(f) {
+  const fExt = f.split('.').pop().toLowerCase();
+  return EXT_VIDEOS.some(ext => `.${fExt}`.endsWith(ext))
+}
+
 const createCarousel = (address, prev, next, onClose) => {
   const carousel = document.createElement('div')
   const location = window.location.href
@@ -7,14 +14,9 @@ const createCarousel = (address, prev, next, onClose) => {
   carousel.style.top = '0'
   carousel.style.zIndex = '1040'
   carousel.style.backgroundColor = 'black'
-  carousel.style.backgroundImage = `url(${location}${address})`
   carousel.style.backgroundSize = 'contain';
   carousel.style.backgroundPosition = 'center';
   carousel.style.backgroundRepeat = 'no-repeat';
-  // carousel.style.height = '100vh'
-  // carousel.style.height = '100vh'
-  // carousel.style.height = '100vh'
-  console.log(location + address)
 
   const cross = document.createElement('div')
   cross.style.width = '50px'
@@ -22,7 +24,7 @@ const createCarousel = (address, prev, next, onClose) => {
   cross.style.height = '50px'
   cross.style.position = 'absolute'
   cross.style.backgroundColor = 'white'
-  cross.style.backgroundImage = 'url(@assets/Close.svg)'
+  cross.style.backgroundImage = 'url(/@assets/Close.svg)'
   cross.style.backgroundSize = 'contain';
   cross.style.backgroundPosition = 'center';
   cross.style.backgroundRepeat = 'no-repeat';
@@ -34,7 +36,7 @@ const createCarousel = (address, prev, next, onClose) => {
 
   prevBtn.style.height = '100px'
   prevBtn.style.width = '55px'
-  prevBtn.style.backgroundImage = 'url(@assets/previous.png)'
+  prevBtn.style.backgroundImage = 'url(/@assets/previous.png)'
   prevBtn.style.backgroundSize = 'contain';
   prevBtn.style.backgroundPosition = 'center';
   prevBtn.style.backgroundRepeat = 'no-repeat';
@@ -49,7 +51,7 @@ const createCarousel = (address, prev, next, onClose) => {
   nextBtn.style.height = '100px'
   nextBtn.style.width = '55px'
   nextBtn.style.right = '0'
-  nextBtn.style.backgroundImage = 'url(@assets/previous.png)'
+  nextBtn.style.backgroundImage = 'url(/@assets/previous.png)'
   nextBtn.style.backgroundSize = 'contain';
   nextBtn.style.backgroundPosition = 'center';
   nextBtn.style.backgroundRepeat = 'no-repeat';
@@ -78,15 +80,30 @@ const createCarousel = (address, prev, next, onClose) => {
     prevLink?.dispatchEvent(new Event('click'))
   }
 
-  if(prev) {
-    carousel.appendChild(prevBtn)
-    prevBtn.addEventListener('click', onPrev)
+
+
+  if(isVideo(address)) {
+    const video = document.createElement('video')
+    video.src = `${location}${address}`
+    video.style.height = '95%'
+    video.style.maxWidth = '100%'
+    video.style.margin = 'auto'
+    video.controls = 'controls'
+    carousel.style.display = 'flex'
+    carousel.append(video)
+  } else {
+    carousel.style.backgroundImage = `url(${location}${address})`
+    if(prev) {
+      carousel.appendChild(prevBtn)
+      prevBtn.addEventListener('click', onPrev)
+    }
+    if(next) {
+      carousel.appendChild(nextBtn)
+      prevBtn.addEventListener('click', onNext)
+      carousel.addEventListener('click', onNext)
+    }
   }
-  if(next) {
-    carousel.appendChild(nextBtn)
-    prevBtn.addEventListener('click', onNext)
-    carousel.addEventListener('click', onNext)
-  }
+
   return carousel
 } 
 
@@ -101,8 +118,6 @@ const openCarousel = (e) => {
   const close = () => {
     popupRoot.removeChild(carousel)
   }
-
-  console.log({ name, prev, next })
 
   const carousel = createCarousel(name, prev, next, close)
 

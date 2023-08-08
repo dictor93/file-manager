@@ -29,7 +29,9 @@
 										<span class="badge rounded-pill bg-danger badge-alignment">err</span>
 									{{else}}
 										<a
+											{{#if isImage}}
 											onClick="openCarousel(event)"
+											{{/if}}
 											class="name"
 											data-index="{{@index}}"
 											data-name="{{name}}"
@@ -43,7 +45,7 @@
 											{{/if}}
 										>
 											{{#if isImage}}
-											<img src="{{thumbnail}}" class="mt-2" style="max-height: 6em; max-width: 100%;">
+											<img src="{{thumbnail}}" alt="{{name}}" class="mt-2" style="max-height: 6em; max-width: 100%;">
 											{{else}}
 											{{name}}
 											{{/if}}

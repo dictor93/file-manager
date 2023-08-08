@@ -32,8 +32,8 @@ const app = express();
 
 
 const options = {
-  key: fs.readFileSync('./ssl/site.key'),
-  cert: fs.readFileSync('./ssl/site.crt'),
+  key: fs.readFileSync('../ssl/site.key'),
+  cert: fs.readFileSync('../ssl/site.crt'),
 };
 
 const http = https.createServer(options, app).listen(port);
@@ -105,9 +105,9 @@ app.use(
 );
 // AUTH
 
-const KEY = process.env.KEY
-  ? process.env.KEY.replace(/ /g, "")
-  : null;
+const KEY = '871538'//process.env.KEY
+  // ? process.env.KEY.replace(/ /g, "")
+  // : null;
 
 app.get("/@logout", (req, res) => {
   if (KEY) {
@@ -145,10 +145,8 @@ app.use((req, res, next) => {
   res.redirect("/@login");
 });
 
-const filesRoot = process.env.FILES_ROOT
-
 function relative(...paths) {
-  const finalPath = paths.reduce((a, b) => path.join(a, b), filesRoot || process.cwd());
+  const finalPath = paths.reduce((a, b) => path.join(a, b), process.cwd());
   if (path.relative(process.cwd(), finalPath).startsWith("..")) {
     throw new Error("Failed to resolve path outside of the working directory");
   }
@@ -597,7 +595,7 @@ if (shellable || cmdable) {
 }
 
 const SMALL_IMAGE_MAX_SIZE = 750 * 1024; // 750 KB
-const EXT_IMAGES = [".jpg", ".jpeg", ".png", ".webp", ".svg", ".gif", ".tiff"];
+const EXT_IMAGES = [".jpg", ".jpeg", ".png", ".webp", ".svg", ".gif", ".tiff", ".mp4", ".3gp", ".avi", ".wmv"];
 function isimage(f) {
   const fExt = f.split('.').pop().toLowerCase();
   for (const ext of EXT_IMAGES) {
@@ -608,6 +606,14 @@ function isimage(f) {
   return false;
 }
 
+const EXT_VIDEOS = [".mp4", ".3gp", ".avi", ".wmv"];
+
+function isVideo(f) {
+  const fExt = f.split('.').pop().toLowerCase();
+  return EXT_VIDEOS.some(ext => `.${fExt}`.endsWith(ext))
+}
+
+
 app.get("/@thumbnail/*", async (req, res) => {
   const encoded = decodeURI(req.url)
   const path = encoded.replace('/@thumbnail/', '')
@@ -617,6 +623,8 @@ app.get("/@thumbnail/*", async (req, res) => {
 
   const folder = isLastSlash ? path.slice(0, lastSlash) : '/'
   const filename = isLastSlash ? path.slice(lastSlash) : path
+
+  if(isVideo(filename)) return res.end()
 
   const tn = await imageThumbnail(relative(folder, filename))
   res.end(tn)
