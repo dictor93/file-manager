@@ -92,11 +92,17 @@ const createCarousel = (address, prev, next, onClose) => {
     carousel.style.display = 'flex'
     carousel.append(video)
   } else {
-    const url = `url(${location}${encodeURIComponent(address).replace(
+    const url = `${location}${encodeURIComponent(address).replace(
       /['()*]/g,
       (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
-    )})`
-    carousel.style.backgroundImage = url
+    )}`
+
+    const imageElement = document.createElement('img')
+    imageElement.setAttribute('src', url)
+    imageElement.classList.add('main-image-view')
+
+    carousel.appendChild(imageElement)
+
     if(prev) {
       carousel.appendChild(prevBtn)
       prevBtn.addEventListener('click', onPrev)
@@ -113,7 +119,6 @@ const createCarousel = (address, prev, next, onClose) => {
 
 const openCarousel = (e) => {
   e.preventDefault()
-  console.log(e)
   const popupRoot = document.getElementById('popup-root')
   let name = e.currentTarget.dataset.name;
   let prev = e.currentTarget.dataset.prev;

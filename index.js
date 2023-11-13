@@ -215,70 +215,48 @@ app.all("/*", (req, res, next) => {
 
 app.post("/*@upload", (req, res) => {
   res.filename = req.params[0];
-
+  let savedNumber = 0
   let buff = null;
-  let saveas = null;
   req.busboy.on("file", (key, stream, filename) => {
     if (key == "file") {
-      let buffs = [];
-      stream.on("data", (d) => {
-        buffs.push(d);
+      console.log({ filename })
+    
+      let fileExists = new Promise((resolve, reject) => {
+        // check if file exists
+        fs.stat(relative(res.filename, filename), (err, stats) => {
+          if (err) {
+            return reject(err);
+          }
+          return resolve(stats);
+        });
       });
-      stream.on("end", () => {
-        buff = Buffer.concat(buffs);
-        buffs = null;
+
+      fileExists
+        .then((stats) => {
+          console.warn("file exists, cannot overwrite");
+          req.flash("error", "File exists, cannot overwrite. ");
+          res.redirect("back");
+        })
+        .catch((err) => {
+          const saveName = relative(res.filename, filename);
+          console.log("saving file to " + saveName);
+          let save = fs.createWriteStream(saveName);
+          save.on("close", () => {
+          
+            savedNumber += savedNumber
+          });
+          save.on("error", (err) => {
+            console.warn(err);
+            req.flash("error", err.toString());
+            res.redirect("back");
+          });
+          stream.pipe(save);
       });
-    }
-  });
-  req.busboy.on("field", (key, value) => {
-    if (key == "saveas") {
-      saveas = value;
     }
   });
   req.busboy.on("finish", () => {
-    if (!buff || !saveas) {
-      return res.status(400).end();
-    }
-    let fileExists = new Promise((resolve, reject) => {
-      // check if file exists
-      fs.stat(relative(res.filename, saveas), (err, stats) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(stats);
-      });
-    });
-
-    fileExists
-      .then((stats) => {
-        console.warn("file exists, cannot overwrite");
-        req.flash("error", "File exists, cannot overwrite. ");
-        res.redirect("back");
-      })
-      .catch((err) => {
-        const saveName = relative(res.filename, saveas);
-        console.log("saving file to " + saveName);
-        let save = fs.createWriteStream(saveName);
-        save.on("close", () => {
-          if (res.headersSent) {
-            return;
-          }
-          if (buff.length === 0) {
-            req.flash("success", "File saved. Warning: empty file.");
-          } else {
-            buff = null;
-            req.flash("success", "File saved. ");
-          }
-          res.redirect("back");
-        });
-        save.on("error", (err) => {
-          console.warn(err);
-          req.flash("error", err.toString());
-          res.redirect("back");
-        });
-        save.write(buff);
-        save.end();
-      });
+    req.flash("success", "File saved: " + savedNumber);
+    res.redirect("back");
   });
   req.pipe(req.busboy);
 });
@@ -714,6 +692,7 @@ app.get("/*", (req, res) => {
                 resolve({
                   name: f,
                   isdirectory: stats.isDirectory(),
+                  isVideo: isVideo(f),
                   isImage,
                   thumbnail,
                   size: stats.size,

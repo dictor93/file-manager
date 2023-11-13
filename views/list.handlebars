@@ -22,7 +22,10 @@
 								<input type="checkbox" class="form-check-input multi-select" data-select="{{name}}" data-select-size="{{size}}" data-select-type="{{#if isdirectory}}directory{{else}}file{{/if}}" id="check{{@index}}">
 								<span class="form-check-label d-flex align-items-start justify-content-between">
 									{{#if isdirectory}}
-										<a href="./{{name}}/" class="name"><span class="dir-icon"></span>{{name}}/</a>
+										<a href="./{{name}}/" class="name">
+											{{octicon "file-directory"}}
+											{{name}}/
+										</a>
 									{{else}}
 									{{#if error}}
 										<a href="./{{name}}/" class="name" title="{{error}}">{{name}}/</a>
@@ -45,6 +48,9 @@
 											{{/if}}
 										>
 											{{#if isImage}}
+											{{#if isVideo}}
+												{{octicon "video"}}
+											{{/if}}
 											<img src="{{thumbnail}}" alt="{{name}}" class="mt-2" style="max-height: 6em; max-width: 100%;">
 											{{else}}
 											{{name}}

@@ -29,3 +29,11 @@
   background-size: contain;
   background-position: center;
 }
+.main-image-view {
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  max-height: 100%;
+  max-width: 100%;
+  position: relative;
+}
